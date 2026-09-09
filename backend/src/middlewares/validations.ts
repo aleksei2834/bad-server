@@ -119,6 +119,13 @@ export const validateUserBody = celebrate({
     }),
 })
 
+export const validateUserUpdateSelfBody = celebrate({
+    body: Joi.object().keys({
+        name: Joi.string().min(2).max(30),
+        phone: Joi.string().pattern(phoneRegExp),
+    }),
+})
+
 export const validateAuthentication = celebrate({
     body: Joi.object().keys({
         email: Joi.string()

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { validateUserUpdateSelfBody } from '../middlewares/validations'
 import {
     getCurrentUser,
     getCurrentUserRoles,
@@ -10,10 +11,11 @@ import {
 } from '../controllers/auth'
 import auth from '../middlewares/auth'
 
+
 const authRouter = Router()
 
 authRouter.get('/user', auth, getCurrentUser)
-authRouter.patch('/me', auth, updateCurrentUser)
+authRouter.patch('/me', auth, validateUserUpdateSelfBody, updateCurrentUser)
 authRouter.get('/user/roles', auth, getCurrentUserRoles)
 authRouter.post('/login', login)
 authRouter.get('/token', refreshAccessToken)
