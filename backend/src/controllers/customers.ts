@@ -179,10 +179,10 @@ export const updateCustomer = async (
     next: NextFunction
 ) => {
     try {
-        const { name, phone, email } = req.body
+        const { name, phone } = req.body
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            { name, phone, email },
+            { name, phone },
             { new: true, runValidators: true }
         )
             .orFail(
