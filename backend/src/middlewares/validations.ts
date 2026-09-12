@@ -38,13 +38,16 @@ export const validateOrderBody = celebrate({
         phone: Joi.string().required().pattern(phoneRegExp).messages({
             'string.empty': 'Не указан телефон',
         }),
-        address: Joi.string().required().messages({
+        address: Joi.string().required().max(200).messages({
             'string.empty': 'Не указан адрес',
+            'string.max': 'Адрес слишком длинный',
         }),
         total: Joi.number().required().messages({
             'string.empty': 'Не указана сумма заказа',
         }),
-        comment: Joi.string().optional().allow(''),
+        comment: Joi.string().optional().allow('').max(1000).messages({
+            'string.max': 'Комментарий слишком длинный',
+        }),
     }),
 })
 
@@ -61,11 +64,13 @@ export const validateProductBody = celebrate({
             fileName: Joi.string().required(),
             originalName: Joi.string().required(),
         }),
-        category: Joi.string().required().messages({
+        category: Joi.string().required().max(50).messages({
             'string.empty': 'Поле "category" должно быть заполнено',
+            'string.max': 'Категория слишком длинная',
         }),
-        description: Joi.string().required().messages({
+        description: Joi.string().required().max(500).messages({
             'string.empty': 'Поле "description" должно быть заполнено',
+            'string.max': 'Описание слишком длинное'
         }),
         price: Joi.number().allow(null),
     }),
@@ -81,8 +86,8 @@ export const validateProductUpdateBody = celebrate({
             fileName: Joi.string().required(),
             originalName: Joi.string().required(),
         }),
-        category: Joi.string(),
-        description: Joi.string(),
+        category: Joi.string().max(50),
+        description: Joi.string().max(500),
         price: Joi.number().allow(null),
     }),
 })
@@ -106,7 +111,7 @@ export const validateUserBody = celebrate({
             'string.min': 'Минимальная длина поля "name" - 2',
             'string.max': 'Максимальная длина поля "name" - 30',
         }),
-        password: Joi.string().min(6).required().messages({
+        password: Joi.string().min(6).max(100).required().messages({
             'string.empty': 'Поле "password" должно быть заполнено',
         }),
         email: Joi.string()
@@ -138,6 +143,7 @@ export const validateAuthentication = celebrate({
         email: Joi.string()
             .required()
             .email()
+            .max(100)
             .message('Поле "email" должно быть валидным email-адресом')
             .messages({
                 'string.required': 'Поле "email" должно быть заполнено',
@@ -162,6 +168,6 @@ export const validateGetCustomersQuery = celebrate({
         totalAmountTo: Joi.number(),
         orderCountFrom: Joi.number(),
         orderCountTo: Joi.number(),
-        search: Joi.string(),
+        search: Joi.string().max(100),
     }),
 })
