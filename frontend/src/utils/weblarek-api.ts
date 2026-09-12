@@ -55,9 +55,16 @@ class Api {
 
     protected async request<T>(endpoint: string, options: RequestInit) {
         try {
+            const csrfToken = getCookie('csrfToken')
+
             const res = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...this.options,
                 ...options,
+                headers: {
+                    ...this.options.headers,
+                    ...options.headers,
+                    ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+                },
             })
             return await this.handleResponse<T>(res)
         } catch (error) {
@@ -65,9 +72,16 @@ class Api {
         }
     }
 
+    getCookie(name: string): string | null {
+        const match = document.cookie.match(
+            new RegExp(`(?:^|; )${name}=([^;]*)`)
+        )
+        return match ? decodeURIComponent(match[1]) : null
+    }
+
     private refreshToken = () => {
         return this.request<UserResponseToken>('/auth/token', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include',
         })
     }
@@ -293,7 +307,7 @@ export class WebLarekAPI extends Api implements IWebLarekAPI {
 
     logoutUser = () => {
         return this.request<ServerResponse<unknown>>('/auth/logout', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include',
         })
     }
