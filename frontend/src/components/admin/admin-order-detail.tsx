@@ -5,15 +5,14 @@ import { OrderData } from '@slices/orders/type'
 import { useActionCreators, useDispatch, useSelector } from '@store/hooks'
 import { StatusType } from '@types'
 import clsx from 'clsx'
-import { format } from 'date-fns'
 import { useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { selectOrderByNumber } from '../../services/selector'
 import { ordersActions } from '../../services/slice/orders'
 import { getOrderByNumber } from '../../services/slice/orders/thunk'
-import { adapterOrderFromServer } from '../../utils/adapterOrderFromServer'
 import { Preloader } from '../preloader'
 import styles from './admin.module.scss'
+import { sanitizeComment } from '../../utils/sanitizeHtml'
 
 const ActionsButton = () => {
     const number = useParams().number || ''
@@ -54,10 +53,8 @@ export default function AdminOrderDetail() {
     const orderData = useSelector(selectOrderByNumber(+number))
 
     useEffect(() => {
-        if (!orderData) {
-            dispatch(getOrderByNumber(number))
-        }
-    }, [dispatch, orderData, number])
+        dispatch(getOrderByNumber(number))
+    }, [dispatch, number])
 
     const orderHeaders = useMemo(
         () => [
@@ -103,7 +100,7 @@ export default function AdminOrderDetail() {
                     <>
                         <div
                             dangerouslySetInnerHTML={{
-                                __html: dataInfo.comment,
+                                __html: sanitizeComment(dataInfo.comment),
                             }}
                         />
                     </>
@@ -134,8 +131,8 @@ export default function AdminOrderDetail() {
     return (
         <DetailInfo
             header={`Заказ № ${orderData.orderNumber}`}
-            subheader={`от ${format(new Date(orderData.createdAt), 'dd.MM.yyyy')}`}
-            data={adapterOrderFromServer(orderData)}
+            subheader={`от ${orderData.orderDate}`}
+            data={orderData}
             headers={orderHeaders}
             actions={[ActionsButton]}
         />
