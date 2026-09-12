@@ -96,7 +96,9 @@ const updateProduct = async (
             productId,
             {
                 $set: {
-                    ...req.body,
+                    title: req.body.title,
+                    category: req.body.category,
+                    description: req.body.description,
                     price: req.body.price ? req.body.price : null,
                     image: req.body.image ? req.body.image : undefined,
                 },

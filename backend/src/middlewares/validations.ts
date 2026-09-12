@@ -147,3 +147,21 @@ export const validateAuthentication = celebrate({
         }),
     }),
 })
+
+export const validateGetCustomersQuery = celebrate({
+    query: Joi.object().keys({
+        page: Joi.number().min(1),
+        limit: Joi.number().min(1),
+        sortField: Joi.string().valid('createdAt', 'totalAmount', 'lastOrderDate'),
+        sortOrder: Joi.string().valid('asc', 'desc'),
+        registrationDateFrom: Joi.string(),
+        registrationDateTo: Joi.string(),
+        lastOrderDateFrom: Joi.string(),
+        lastOrderDateTo: Joi.string(),
+        totalAmountFrom: Joi.number(),
+        totalAmountTo: Joi.number(),
+        orderCountFrom: Joi.number(),
+        orderCountTo: Joi.number(),
+        search: Joi.string(),
+    }),
+})
