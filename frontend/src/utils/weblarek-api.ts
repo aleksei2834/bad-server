@@ -55,7 +55,7 @@ class Api {
 
     protected async request<T>(endpoint: string, options: RequestInit) {
         try {
-            const csrfToken = getCookie('csrfToken')
+            const csrfToken = getCookie('_csrf')
 
             const res = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...this.options,

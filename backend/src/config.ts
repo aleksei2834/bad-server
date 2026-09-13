@@ -25,7 +25,7 @@ export const REFRESH_TOKEN = {
 export const { ORIGIN_ALLOW = 'http://localhost:5173' } = process.env;
 export const CSRF_TOKEN = {
     cookie: {
-        name: 'csrfToken',
+        name: '_csrf',
         options: {
             httpOnly: false,
             sameSite: 'lax',
