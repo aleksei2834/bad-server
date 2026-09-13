@@ -4,6 +4,8 @@ import { unlink } from 'fs'
 import sharp from 'sharp'
 import BadRequestError from '../errors/bad-request-error'
 
+const MIN_FILE_SIZE = 2 * 1024
+
 export const uploadFile = async (
     req: Request,
     res: Response,
@@ -11,6 +13,11 @@ export const uploadFile = async (
 ) => {
     if (!req.file) {
         return next(new BadRequestError('Файл не загружен'))
+    }
+
+    if (req.file.size < MIN_FILE_SIZE) {
+        unlink(req.file.path, () => {})
+        return next(new BadRequestError('Файл слишком маленький'))
     }
 
     try {

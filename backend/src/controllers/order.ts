@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { FilterQuery, Error as MongooseError, Types } from 'mongoose'
+import sanitizeHtml from 'sanitize-html'
 import escapeRegExp from '../utils/escapeRegExp'
 import BadRequestError from '../errors/bad-request-error'
 import NotFoundError from '../errors/not-found-error'
@@ -301,6 +302,14 @@ export const createOrder = async (
         const { address, payment, phone, total, email, items, comment } =
             req.body
 
+        const sanitizedComment = comment
+    ? sanitizeHtml(comment, {
+          allowedTags: ['b', 'i', 'em', 'strong', 'a'],
+          allowedAttributes: { a: ['href'] },
+          allowedSchemes: ['http', 'https'],
+      })
+    : comment
+
         items.forEach((id: Types.ObjectId) => {
             const product = products.find((p) => p._id.equals(id))
             if (!product) {
@@ -322,7 +331,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: sanitizedComment,
             customer: userId,
             deliveryAddress: address,
         })
