@@ -14,8 +14,8 @@ const { PORT = 3000 } = process.env
 const app = express()
 
 const limiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 20,
+    windowMs: 10 * 1000,
+    max: 30,             
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: 'Слишком много запросов, попробуйте позже' },
