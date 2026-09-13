@@ -1,5 +1,6 @@
 .modal {
     @include mixins.sublayer;
+    position: fixed;
     height: max-content;
     display: none;
     justify-content: center;

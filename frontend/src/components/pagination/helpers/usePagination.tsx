@@ -1,7 +1,7 @@
 import { AsyncThunk } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from '@store/hooks'
 import { RootState } from '@store/store'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 interface PaginationResult<_, U> {
@@ -15,8 +15,8 @@ interface PaginationResult<_, U> {
     setLimit: (limit: number) => void
 }
 
-const usePagination = <T, U>(
-    asyncAction: AsyncThunk<T, Record<string, unknown>, any>,
+const usePagination = <T extends { pagination: { totalPages: number } }, U>(
+    asyncAction: AsyncThunk<T, Record<string, unknown>, object>,
     selector: (state: RootState) => U[],
     defaultLimit: number
 ): PaginationResult<T, U> => {
@@ -32,10 +32,39 @@ const usePagination = <T, U>(
 
     const limit = Number(searchParams.get('limit')) || defaultLimit
 
-    const fetchData = async (params: Record<string, any>) => {
-        const response: any = await dispatch(asyncAction(params))
-        setTotalPages(response.payload.pagination.totalPages)
-    }
+    const fetchData = useCallback(
+        async (params: Record<string, unknown>) => {
+            const response = await dispatch(asyncAction(params))
+            if ('payload' in response) {
+                const payload = response.payload as T
+                setTotalPages(payload.pagination.totalPages)
+            }
+        },
+        [dispatch, asyncAction]
+    )
+
+    const updateURL = useCallback(
+        (newParams: Record<string, string | number | undefined>) => {
+            const updatedParams = new URLSearchParams(searchParams)
+            Object.entries(newParams).forEach(([key, value]) => {
+                if (value !== undefined) {
+                    updatedParams.set(key, value.toString())
+                } else {
+                    updatedParams.delete(key)
+                }
+            })
+            setSearchParams(updatedParams)
+        },
+        [searchParams, setSearchParams]
+    )
+
+    const setPage = useCallback(
+        (page: number) => {
+            const newPage = Math.max(1, Math.min(page, totalPages))
+            updateURL({ page: newPage, limit })
+        },
+        [totalPages, limit, updateURL]
+    )
 
     useEffect(() => {
         const params = Object.fromEntries(searchParams.entries())
@@ -44,20 +73,7 @@ const usePagination = <T, U>(
                 setPage(1)
             }
         })
-    }, [currentPage, limit, searchParams])
-
-    const updateURL = (newParams: Record<string, any>) => {
-        3
-        const updatedParams = new URLSearchParams(searchParams)
-        Object.entries(newParams).forEach(([key, value]) => {
-            if (value !== undefined) {
-                updatedParams.set(key, value.toString())
-            } else {
-                updatedParams.delete(key)
-            }
-        })
-        setSearchParams(updatedParams)
-    }
+    }, [currentPage, limit, searchParams, data.length, fetchData, setPage])
 
     const nextPage = () => {
         if (currentPage < totalPages) {
@@ -71,13 +87,8 @@ const usePagination = <T, U>(
         }
     }
 
-    const setPage = (page: number) => {
-        const newPage = Math.max(1, Math.min(page, totalPages))
-        updateURL({ page: newPage, limit })
-    }
-
     const setLimit = (newLimit: number) => {
-        updateURL({ page: 1, limit: newLimit }) // При изменении лимита возвращаемся на первую страницу
+        updateURL({ page: 1, limit: newLimit })
     }
 
     return {
