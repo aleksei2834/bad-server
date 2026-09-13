@@ -2,15 +2,14 @@ import Button from '@components/button'
 import DetailInfo from '@components/detail-info'
 import { OrderData } from '@slices/orders/type'
 import clsx from 'clsx'
-import { format } from 'date-fns'
 import { useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from '../../services/hooks'
 import { selectOrderByNumber } from '../../services/selector'
 import { getCurrentUserOrderByNumber } from '../../services/slice/profile-orders/thunk'
-import { adapterOrderFromServer } from '../../utils/adapterOrderFromServer'
 import { Preloader } from '../preloader'
 import styles from './profile.module.scss'
+import { sanitizeComment } from '../../utils/sanitizeHtml'
 
 const CloseButton = () => {
     const navigate = useNavigate()
@@ -24,10 +23,8 @@ export default function ProfileOrderDetail() {
     console.log(orderData)
 
     useEffect(() => {
-        if (!orderData) {
-            dispatch(getCurrentUserOrderByNumber(number))
-        }
-    }, [dispatch, orderData, number])
+        dispatch(getCurrentUserOrderByNumber(number))
+    }, [dispatch, number])
 
     const orderHeaders = useMemo(
         () => [
@@ -73,7 +70,7 @@ export default function ProfileOrderDetail() {
                         {dataInfo.comment ? (
                             <div
                                 dangerouslySetInnerHTML={{
-                                    __html: dataInfo.comment,
+                                    __html: sanitizeComment(dataInfo.comment),
                                 }}
                             />
                         ) : (
@@ -93,8 +90,8 @@ export default function ProfileOrderDetail() {
     return (
         <DetailInfo
             header={`Заказ № ${orderData.orderNumber}`}
-            subheader={`от ${format(new Date(orderData.createdAt), 'dd.MM.yyyy')}`}
-            data={adapterOrderFromServer(orderData)}
+            subheader={`от ${orderData.orderDate}`}
+            data={orderData}
             headers={orderHeaders}
             actions={[CloseButton]}
         />

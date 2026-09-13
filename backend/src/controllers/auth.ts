@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express'
 import { constants } from 'http2'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { Error as MongooseError } from 'mongoose'
-import { REFRESH_TOKEN } from '../config'
+import { CSRF_TOKEN, REFRESH_TOKEN } from '../config'
 import BadRequestError from '../errors/bad-request-error'
 import ConflictError from '../errors/conflict-error'
 import NotFoundError from '../errors/not-found-error'
@@ -17,16 +17,20 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         const user = await User.findUserByCredentials(email, password)
         const accessToken = user.generateAccessToken()
         const refreshToken = await user.generateRefreshToken()
+        const csrfToken = crypto.randomBytes(32).toString('hex')
+
         res.cookie(
             REFRESH_TOKEN.cookie.name,
             refreshToken,
             REFRESH_TOKEN.cookie.options
         )
-        return res.json({
-            success: true,
-            user,
-            accessToken,
-        })
+        res.cookie(
+            CSRF_TOKEN.cookie.name,
+            csrfToken,
+            CSRF_TOKEN.cookie.options
+        )
+
+        return res.json({ success: true, user, accessToken })
     } catch (err) {
         return next(err)
     }
@@ -40,11 +44,17 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
         await newUser.save()
         const accessToken = newUser.generateAccessToken()
         const refreshToken = await newUser.generateRefreshToken()
+        const csrfToken = crypto.randomBytes(32).toString('hex')
 
         res.cookie(
             REFRESH_TOKEN.cookie.name,
             refreshToken,
             REFRESH_TOKEN.cookie.options
+        )
+        res.cookie(
+            CSRF_TOKEN.cookie.name,
+            csrfToken,
+            CSRF_TOKEN.cookie.options
         )
         return res.status(constants.HTTP_STATUS_CREATED).json({
             success: true,
@@ -149,10 +159,16 @@ const refreshAccessToken = async (
         )
         const accessToken = await userWithRefreshTkn.generateAccessToken()
         const refreshToken = await userWithRefreshTkn.generateRefreshToken()
+        const csrfToken = crypto.randomBytes(32).toString('hex')
         res.cookie(
             REFRESH_TOKEN.cookie.name,
             refreshToken,
             REFRESH_TOKEN.cookie.options
+        )
+        res.cookie(
+            CSRF_TOKEN.cookie.name,
+            csrfToken,
+            CSRF_TOKEN.cookie.options
         )
         return res.json({
             success: true,
@@ -192,9 +208,12 @@ const updateCurrentUser = async (
 ) => {
     const userId = res.locals.user._id
     try {
-        const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
-            new: true,
-        }).orFail(
+        const { name, phone } = req.body
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { name, phone },
+            { new: true, runValidators: true }
+        ).orFail(
             () =>
                 new NotFoundError(
                     'Пользователь по заданному id отсутствует в базе'
@@ -206,6 +225,14 @@ const updateCurrentUser = async (
     }
 }
 
+const getCsrfToken = (_req: Request, res: Response) => {
+    const csrfToken = crypto.randomBytes(32).toString('hex')
+
+    res.cookie(CSRF_TOKEN.cookie.name, csrfToken, CSRF_TOKEN.cookie.options)
+
+    return res.status(200).json({ csrfToken })
+}
+
 export {
     getCurrentUser,
     getCurrentUserRoles,
@@ -214,4 +241,5 @@ export {
     refreshAccessToken,
     register,
     updateCurrentUser,
+    getCsrfToken
 }

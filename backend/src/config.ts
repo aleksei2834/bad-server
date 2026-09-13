@@ -22,3 +22,16 @@ export const REFRESH_TOKEN = {
         } as CookieOptions,
     },
 }
+export const { ORIGIN_ALLOW = 'http://localhost:5173' } = process.env;
+export const CSRF_TOKEN = {
+    cookie: {
+        name: '_csrf',
+        options: {
+            httpOnly: false,
+            sameSite: 'lax',
+            secure: false,
+            maxAge: ms(process.env.AUTH_REFRESH_TOKEN_EXPIRY || '7d'),
+            path: '/',
+        } as CookieOptions,
+    },
+}

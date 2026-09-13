@@ -1,20 +1,24 @@
-import { RootState } from '../store'
+import { adapterOrderFromServer } from '../../utils/adapterOrderFromServer';
+import { RootState } from '../store';
+
 
 export const selectOrderByNumber =
     (orderNumber: number) => (state: RootState) => {
+        if (state.orders.orderSelected?.orderNumber === orderNumber) {
+            return state.orders.orderSelected
+        }
         if (state.orders.ordersData.length) {
             const data = state.orders.ordersData.find(
                 (item) => item.orderNumber === orderNumber
             )
-            return data ? data : null
+            return data ? adapterOrderFromServer(data) : null
         }
         if (state['profile-orders'].ordersData.length) {
             const data = state['profile-orders'].ordersData.find(
                 (item) => item.orderNumber === orderNumber
             )
-            return data ? data : null
+            return data ? adapterOrderFromServer(data) : null
         }
-
         return null
     }
 

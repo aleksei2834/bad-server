@@ -7,6 +7,7 @@ import ConflictError from '../errors/conflict-error'
 import NotFoundError from '../errors/not-found-error'
 import Product from '../models/product'
 import movingFile from '../utils/movingFile'
+import { invalidateCache } from '../middlewares/cache'
 
 // GET /product
 const getProducts = async (req: Request, res: Response, next: NextFunction) => {
@@ -58,7 +59,8 @@ const createProduct = async (
             price,
             title,
         })
-        return res.status(constants.HTTP_STATUS_CREATED).send(product)
+        invalidateCache('/product');
+        return res.status(constants.HTTP_STATUS_CREATED).send(product) 
     } catch (error) {
         if (error instanceof MongooseError.ValidationError) {
             return next(new BadRequestError(error.message))
@@ -96,13 +98,16 @@ const updateProduct = async (
             productId,
             {
                 $set: {
-                    ...req.body,
+                    title: req.body.title,
+                    category: req.body.category,
+                    description: req.body.description,
                     price: req.body.price ? req.body.price : null,
                     image: req.body.image ? req.body.image : undefined,
                 },
             },
             { runValidators: true, new: true }
         ).orFail(() => new NotFoundError('Нет товара по заданному id'))
+        invalidateCache('/product')
         return res.send(product)
     } catch (error) {
         if (error instanceof MongooseError.ValidationError) {
@@ -132,6 +137,7 @@ const deleteProduct = async (
         const product = await Product.findByIdAndDelete(productId).orFail(
             () => new NotFoundError('Нет товара по заданному id')
         )
+        invalidateCache('/product')
         return res.send(product)
     } catch (error) {
         if (error instanceof MongooseError.CastError) {

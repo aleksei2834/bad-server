@@ -1,5 +1,9 @@
 import { Router } from 'express'
+import { loginLimiter } from '../middlewares/rateLimiter'
+import csrfProtection from '../middlewares/csrf'
+import { validateUserUpdateSelfBody } from '../middlewares/validations'
 import {
+    getCsrfToken,
     getCurrentUser,
     getCurrentUserRoles,
     login,
@@ -10,14 +14,18 @@ import {
 } from '../controllers/auth'
 import auth from '../middlewares/auth'
 
+
+
+
 const authRouter = Router()
 
 authRouter.get('/user', auth, getCurrentUser)
-authRouter.patch('/me', auth, updateCurrentUser)
+authRouter.patch('/me', auth, validateUserUpdateSelfBody, updateCurrentUser)
 authRouter.get('/user/roles', auth, getCurrentUserRoles)
-authRouter.post('/login', login)
-authRouter.get('/token', refreshAccessToken)
-authRouter.get('/logout', logout)
+authRouter.post('/login', loginLimiter, login)
+authRouter.post('/token', csrfProtection, refreshAccessToken)
+authRouter.post('/logout', csrfProtection, logout)
 authRouter.post('/register', register)
+authRouter.get('/csrf-token', getCsrfToken)
 
 export default authRouter
