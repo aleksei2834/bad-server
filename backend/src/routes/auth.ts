@@ -3,6 +3,7 @@ import { loginLimiter } from '../middlewares/rateLimiter'
 import csrfProtection from '../middlewares/csrf'
 import { validateUserUpdateSelfBody } from '../middlewares/validations'
 import {
+    getCsrfToken,
     getCurrentUser,
     getCurrentUserRoles,
     login,
@@ -25,5 +26,6 @@ authRouter.post('/login', loginLimiter, login)
 authRouter.post('/token', csrfProtection, refreshAccessToken)
 authRouter.post('/logout', csrfProtection, logout)
 authRouter.post('/register', register)
+authRouter.get('/csrf-token', getCsrfToken)
 
 export default authRouter
